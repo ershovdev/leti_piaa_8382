@@ -1,4 +1,5 @@
 #include <iostream>
+#include<sstream>
 #include <map>
 #include <vector>
 #include <set>
@@ -134,25 +135,28 @@ int main() {
     Graph graph;
     int n;
     char startPeak, finishPeak;
+    stringstream input_stream;
     string input;
 
-    cout << "Сколько вершин извлекать из очереди с приоритетами?";
+    cout << "Сколько вершин извлекать из очереди с приоритетами?" << endl;
     getline(cin, input);
-    n = input[0];
+    input_stream.str(input);
+
+    input_stream >> n;
 
     getline(cin, input);
     startPeak = input[0];
     finishPeak = input[2];
 
-    while (getline(cin, input) && !input.empty()) {
-//        cout << input[0] << " " << input[2] << " " << stod(input.substr(4)) << endl;
+    while (getline(cin, input)) {
+        if (input.empty()) break;
         graph[input[0]].emplace(input[2], stod(input.substr(4)));
     }
 
     string greedy = graph.greedySearch(startPeak, finishPeak);
     cout << greedy << endl;
 
-    string a_star = "A*: " + graph.aStarSearch(startPeak, finishPeak, n);
+    string a_star = "A*: " + graph.aStarSearch(startPeak, finishPeak);
     cout << a_star << endl;
 
     return 0;
