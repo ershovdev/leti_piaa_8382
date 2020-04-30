@@ -92,36 +92,74 @@ public:
 
         path_from_start[start] = start;
         cout << "A*, промежуточный путь:" << endl;
-        cout << "path_from_start[" << start << "]: " << path_from_start[start] << endl;
+        cout << "Путь из " << start << ": " << path_from_start[start] << endl;
         weight_from_start[start] = 0;
+        cout << "Вес из " << start << ": " << 0 << endl;
         queue.push(*weight_from_start.begin());
+        cout << "Вставляем " << (*weight_from_start.begin()).first << " в очередь" << endl;
 
         while (!queue.empty())
         {
+            priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> tmp = queue;
+            cout << "queue now: ";
+            while (!tmp.empty()) {
+                cout << tmp.top().first << " ";
+                tmp.pop();
+            }
+            cout << endl;
+
             vector <pair<char, double>> peaks; // n верхних элементов очереди, для "мультипоточности"
 
             auto curr = queue.top(); // Вытаскиваем верх очереди и проверяем на равенство конечной вершине
-            if (curr.first == finish) return path_from_start[finish];
+            if (curr.first == finish) {
+                cout << "Дошли до конечной вершины!" << endl;
+                return path_from_start[finish];
+            }
 
             for (int i = 0; i < n && !queue.empty(); i++) {
                 curr = queue.top();
                 if (curr.first == finish) continue;
                 queue.pop();
+                cout << "Убираем " << curr.first << " из очереди" << endl;
                 peaks.push_back(curr);
+                cout << "Добавляем в мультипоточный контейнер " << curr.first << endl;
+
+                priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> tmp = queue;
+                cout << "queue now: ";
+                while (!tmp.empty()) {
+                    cout << tmp.top().first << " ";
+                    tmp.pop();
+                }
+                cout << endl;
             }
 
             for (auto &peak : peaks) { // Обрабатываем все снятые с очереди вершины
+                cout << "Рассмотрим " << peak.first << " из мультипоточного контейнера" << endl;
                 for (auto &w : ways[peak.first]) { // Обрабатываем смежные к peak вершины
+                    cout << "Рассмотрим смежную к " << peak.first << " вершину " << w.first << endl;
                     double new_w = weight_from_start[peak.first] + w.second; // Новый вес для текущей смежной вершины
+                    cout << "Приоритет для " << w.first << ": " << new_w << endl;
 
                     // Если вес уменьшился или он еще не вычислен
                     if (new_w < weight_from_start[w.first] || !weight_from_start[w.first]) {
+                        cout << "Новый вес для " << w.first << ": " << new_w << endl;
+                        cout << "Вес, было: " << weight_from_start[w.first] << ", ";
+                        cout << "стало: " << new_w << endl;
                         weight_from_start[w.first] = new_w; // Обновляем вес
+                        cout << "Путь, было: " << path_from_start[w.first] << ", ";
+                        cout << "стало: " << path_from_start[peak.first] + w.first << endl;
                         path_from_start[w.first] = path_from_start[peak.first] + w.first; // Обновляем путь
-                        cout << "path_from_start[" << w.first << "]: " << path_from_start[w.first] << endl;
 
                         // Пушим в очередь с приоритетом вершину
                         queue.push({w.first, new_w + abs(finish - w.first)});
+
+                        priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> tmp = queue;
+                        cout << "queue now: ";
+                        while (!tmp.empty()) {
+                            cout << tmp.top().first << " ";
+                            tmp.pop();
+                        }
+                        cout << endl;
                     }
                 }
             }
