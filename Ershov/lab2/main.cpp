@@ -84,30 +84,40 @@ public:
         return res;
     }
 
+    void print_queue_and_peaks(
+            priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> const queue,
+            vector <pair<char, double>> const peaks) {
+        cout << "-------" << endl;
+        priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> tmp = queue;
+        cout << "Очередь: ";
+        while (!tmp.empty()) {
+            cout << tmp.top().first << " ";
+            tmp.pop();
+        }
+        cout << endl;
+        cout << "Мультипоточный контейнер: ";
+        for (auto peak : peaks) {
+            cout << peak.first << " ";
+        }
+        cout << endl << "-------" << endl;
+    }
+
     string aStarSearch(char start, char finish, int n = 1)
     {
         priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> queue; // Очередь с приоритетом
         map <char, string> path_from_start; // Контейнер с путями от стартовой до char
-        map <char, double> weight_from_start; // Контейнер с весами от стартовой до char
+        map <char, double> gX;  // Контейнер со стоимостями достижения вершин (g(h))
 
         path_from_start[start] = start;
         cout << "A*, промежуточный путь:" << endl;
         cout << "Путь из " << start << ": " << path_from_start[start] << endl;
-        weight_from_start[start] = 0;
-        cout << "Вес из " << start << ": " << 0 << endl;
-        queue.push(*weight_from_start.begin());
-        cout << "Вставляем " << (*weight_from_start.begin()).first << " в очередь" << endl;
+        gX[start] = 0;
+        cout << "Стоимость достижения " << start << ": " << 0 << endl;
+        queue.push(*gX.begin());
+        cout << "Вставляем " << (*gX.begin()).first << " в очередь" << endl;
 
         while (!queue.empty())
         {
-            priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> tmp = queue;
-            cout << "queue now: ";
-            while (!tmp.empty()) {
-                cout << tmp.top().first << " ";
-                tmp.pop();
-            }
-            cout << endl;
-
             vector <pair<char, double>> peaks; // n верхних элементов очереди, для "мультипоточности"
 
             auto curr = queue.top(); // Вытаскиваем верх очереди и проверяем на равенство конечной вершине
@@ -120,46 +130,35 @@ public:
                 curr = queue.top();
                 if (curr.first == finish) continue;
                 queue.pop();
-                cout << "Убираем " << curr.first << " из очереди" << endl;
+                cout << "(" << curr.first << ") очередь -> мультипоточный контейнер" << endl;
                 peaks.push_back(curr);
-                cout << "Добавляем в мультипоточный контейнер " << curr.first << endl;
 
-                priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> tmp = queue;
-                cout << "queue now: ";
-                while (!tmp.empty()) {
-                    cout << tmp.top().first << " ";
-                    tmp.pop();
-                }
-                cout << endl;
+                print_queue_and_peaks(queue, peaks);
             }
+
+            cout << endl;
 
             for (auto &peak : peaks) { // Обрабатываем все снятые с очереди вершины
                 cout << "Рассмотрим " << peak.first << " из мультипоточного контейнера" << endl;
                 for (auto &w : ways[peak.first]) { // Обрабатываем смежные к peak вершины
                     cout << "Рассмотрим смежную к " << peak.first << " вершину " << w.first << endl;
-                    double new_w = weight_from_start[peak.first] + w.second; // Новый вес для текущей смежной вершины
-                    cout << "Приоритет для " << w.first << ": " << new_w << endl;
+                    double new_gX = gX[peak.first] + w.second; // Новая стоимость достижения для текущей смежной вершины
+                    cout << "Стоимость достижения " << w.first << ": " << new_gX << endl;
 
                     // Если вес уменьшился или он еще не вычислен
-                    if (new_w < weight_from_start[w.first] || !weight_from_start[w.first]) {
-                        cout << "Новый вес для " << w.first << ": " << new_w << endl;
-                        cout << "Вес, было: " << weight_from_start[w.first] << ", ";
-                        cout << "стало: " << new_w << endl;
-                        weight_from_start[w.first] = new_w; // Обновляем вес
+                    if (new_gX < gX[w.first] || !gX[w.first]) {
+                        cout << "Новый приоритет для " << w.first << ": " << new_gX + abs(finish - w.first) << endl;
+                        cout << "Стоимость достижения, было: " << gX[w.first] << ", ";
+                        cout << "стало: " << new_gX << endl;
+                        gX[w.first] = new_gX; // Обновляем стоимость достижения
                         cout << "Путь, было: " << path_from_start[w.first] << ", ";
                         cout << "стало: " << path_from_start[peak.first] + w.first << endl;
                         path_from_start[w.first] = path_from_start[peak.first] + w.first; // Обновляем путь
 
                         // Пушим в очередь с приоритетом вершину
-                        queue.push({w.first, new_w + abs(finish - w.first)});
+                        queue.push({w.first, new_gX + abs(finish - w.first)});
 
-                        priority_queue <pair<char, double>, vector<pair<char, double>>, Compare> tmp = queue;
-                        cout << "queue now: ";
-                        while (!tmp.empty()) {
-                            cout << tmp.top().first << " ";
-                            tmp.pop();
-                        }
-                        cout << endl;
+                        print_queue_and_peaks(queue, peaks);
                     }
                 }
             }
@@ -194,7 +193,7 @@ int main() {
     string greedy = graph.greedySearch(startPeak, finishPeak);
     cout << greedy << endl;
 
-    string a_star = "A*: " + graph.aStarSearch(startPeak, finishPeak);
+    string a_star = "A*: " + graph.aStarSearch(startPeak, finishPeak, n);
     cout << a_star << endl;
 
     return 0;
