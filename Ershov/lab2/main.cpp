@@ -122,7 +122,7 @@ public:
 
             auto curr = queue.top(); // Вытаскиваем верх очереди и проверяем на равенство конечной вершине
             if (curr.first == finish) {
-                cout << "Дошли до конечной вершины!" << endl;
+                cout << "Верхняя вершина очереди " << curr.first << " равна конечной вершине!" << endl;
                 return path_from_start[finish];
             }
 
